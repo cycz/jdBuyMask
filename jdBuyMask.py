@@ -15,16 +15,19 @@ from bs4 import BeautifulSoup
 需要修改
 '''
 # cookie 网页获取
-cookies_String = 'xxxx'
+cookies_String = '__jdv=122270672|direct|-|none|-|1580535906444; __jdu=1580535906442142991701; PCSYCityID=CN_440000_440300_440306; shshshfpa=56ef5666-b8a3-0c0e-7c0e-2b85c9cd71fe-1580566937; shshshfpb=yn3Coypi6rowjjDXGn6wsDg%3D%3D; user-key=266b3872-247c-42f5-ae74-f8188d322766; pinId=TwS_2tnqmnMXFXThp7HhSbV9-x-f3wj7; pin=jd_7c3992aa27d1a; unick=jd_131606dpd; _tp=DE2RBmUzOYts3YZTUipvPLsBixznVgm%2BvmufBdfqvY8%3D; _pst=jd_7c3992aa27d1a; ipLocation=%u5e7f%u4e1c; cn=2; areaId=19; ipLoc-djd=19-1607-4773-0; shshshfp=adafa854753888946a49d8da1baad0e1; shshshsID=f05e8da0ac619bcf833e1abacf46de0d_1_1580892974629; __jda=122270672.1580535906442142991701.1580535906.1580883832.1580892973.13; __jdc=122270672; wlfstk_smdl=tvy5undurdff3an7d6e9qbvm6xg307hu; TrackID=1B9GMyTVFpk3OKcee33ViYrGDGhUfRlvpTC9vzL9-t3cYSq3ebwzgVtP8JBz6tWaw27Ang_j0jlxvmrCDJIRcyhqFt1YQn9m82AjQsHC04Sc; thor=373B2919DFE41FEBA70E81553E4B24282B0D8FD6B0C16A7B6E1DB1438EDDDFBC889A8BC2C49ECBF75C4B4084EBE9F3F9761AB0B8BC6F71AF74E4BF54B74633B952EDCEB92F79FBB7F69DEC799A2C0379A87FF699D4C0CE24191240F17FC39A2C42AB8265114280097C3157C398A3B99A66D429E33BA916B29C63F260353B236A29D4DE185DDFE27AF8B047851A859C2618EF3FDEAB31223B488D1B7C33A027A0; ceshi3.com=201; 3AB9D23F7A4B3C9B=5VEE42KLVLLJHEU65RGJ5D7PEH52TBNAMUNVAJ4MOAZ3TKYYAMLHZTQEVKZUO34WICCHP2TWA7FIR2GZGQEY5TE4WI; __jdb=122270672.6.1580535906442142991701|13.1580892973'
 
 # 有货通知 收件邮箱
-mail = 'xxxx@qq.com'
+mail = '838143144@qq.com'
 # 商品的url
 url = [
     'https://c0.3.cn/stock?skuId=1336984&area=19_1607_4773_0&venderId=1000078145&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery6715489',
     'https://c0.3.cn/stock?skuId=4642656&area=19_1607_4773_0&venderId=1000006724&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4552086',
     'https://c0.3.cn/stock?skuId=65466451629&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery2790674',
     'https://c0.3.cn/stock?skuId=65437208345&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery1749958',
+    'https://c0.3.cn/stock?skuId=7498169&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery4102801',
+    'https://c0.3.cn/stock?skuId=7498165&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery9614479',
+    'https://c0.3.cn/stock?skuId=7263128&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery8872960',
     # 'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
 ]
 '''
@@ -430,7 +433,20 @@ def submit_order(risk_control):
     except Exception as e:
         logger.error(e)
         return False
+'''
 
+'''
+def item_removed( sku_id):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+        "Referer": "http://trade.jd.com/shopping/order/getOrderInfo.action",
+        "Connection": "keep-alive",
+        'Host': 'trade.jd.com',
+    }
+    url = 'https://item.jd.com/{}.html'.format(sku_id)
+    page = requests.get(url=url, headers=headers)
+    return '该商品已下柜' in page.text
 
 '''
 购买环节
@@ -489,13 +505,16 @@ while (1):
             if (response.text.find('无货') > 0):
                 logger.info('[%s]类型口罩无货', skuId)
             else:
-                logger.info('[%s]类型口罩有货啦!马上下单', skuId)
-                if buyMask(skuId):
-                    sendMail(skuidUrl, True)
+                if item_removed(skuId):
+                    logger.info('[%s]类型口罩有货啦!马上下单', skuId)
+                    if buyMask(skuId):
+                        sendMail(skuidUrl, True)
+                        sys.exit(1)
+                    else:
+                        sendMail(skuidUrl, False)
                     sys.exit(1)
                 else:
-                    sendMail(skuidUrl, False)
-                sys.exit(1)
+                    logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
         time.sleep(5)
         if flag % 20 == 0:
             logger.info('校验是否还在登录')

@@ -15,15 +15,17 @@ from bs4 import BeautifulSoup
 需要修改
 '''
 # cookie 网页获取
-cookies_String = 'xxxxxxxx'
+cookies_String = '__jdv=122270672|direct|-|none|-|1580535906444; __jdu=1580535906442142991701; PCSYCityID=CN_440000_440300_440306; shshshfpa=56ef5666-b8a3-0c0e-7c0e-2b85c9cd71fe-1580566937; shshshfpb=yn3Coypi6rowjjDXGn6wsDg%3D%3D; user-key=266b3872-247c-42f5-ae74-f8188d322766; areaId=19; ipLoc-djd=19-1607-4773-0; TrackID=1q0c2Xd5ZwuuT0dc74HuRWsSxhqo9Z0lf5NxTKhoLUbcSokgIzroEh7Yh7moVcH-QJ7PqwpB1ctp301FrPuaCxdvcIs8pM1YLFjAoGc2nqP0; pinId=TwS_2tnqmnMXFXThp7HhSbV9-x-f3wj7; pin=jd_7c3992aa27d1a; unick=jd_131606dpd; ceshi3.com=201; _tp=DE2RBmUzOYts3YZTUipvPLsBixznVgm%2BvmufBdfqvY8%3D; _pst=jd_7c3992aa27d1a; __jda=122270672.1580535906442142991701.1580535906.1580831197.1580840655.10; __jdc=122270672; cart-main=xx; cd=0; 3AB9D23F7A4B3C9B=5VEE42KLVLLJHEU65RGJ5D7PEH52TBNAMUNVAJ4MOAZ3TKYYAMLHZTQEVKZUO34WICCHP2TWA7FIR2GZGQEY5TE4WI; cn=2; thor=373B2919DFE41FEBA70E81553E4B24282B0D8FD6B0C16A7B6E1DB1438EDDDFBCC54269782A4031D66AAE1191AE1A8766D6835CFC913B1ABD0E011ECFFF5FF79D8C21D990BC490E8D46F15CA43652698B4E0CF96EFAC47910FF39BBF1CCB70C88F0EFBDDF109347A1FC06F4BBD5EFC065E8E259E1D771FB5FC2E8BAE29658AC1E97EF46B2C0C297CCC731178E907BA7AD8235976DDC895A9CA55857883E40F79B; shshshfp=ad1b257ca551e6125dc866edcf786731; shshshsID=f397357f521aac5f8a79ebaad09a8821_11_1580848321777; __jdb=122270672.36.1580535906442142991701|10.1580840655'
 
 # 有货通知 收件邮箱
-mail = 'xxxxxxxx@qq.com'
+mail = '838143144@qq.com'
 # 商品的url
 url = [
     'https://c0.3.cn/stock?skuId=1336984&area=19_1607_4773_0&venderId=1000078145&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery6715489',
     'https://c0.3.cn/stock?skuId=4642656&area=19_1607_4773_0&venderId=1000006724&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4552086',
-    # 'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
+    'https://c0.3.cn/stock?skuId=65466451629&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery2790674',
+    'https://c0.3.cn/stock?skuId=65437208345&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery1749958',
+    'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
 ]
 '''
 备用
@@ -128,20 +130,24 @@ session.cookies = cookiesJar
 
 
 def validate_cookies():
-    try:
-        targetURL = 'https://order.jd.com/center/list.action'
-        payload = {
-            'rid': str(int(time.time() * 1000)),
-        }
-        resp = session.get(url=targetURL, params=payload, allow_redirects=False)
-        if resp.status_code == requests.codes.OK:
-            logger.info('登录成功')
-        else:
-            logger.info('请重新获取cookie')
-            sys.exit(1)
-    except Exception as e:
-        logger.info('请重新获取cookie')
-        sys.exit(1)
+    for flag in range(1,3):
+        try:
+            targetURL = 'https://order.jd.com/center/list.action'
+            payload = {
+                'rid': str(int(time.time() * 1000)),
+            }
+            resp = session.get(url=targetURL, params=payload, allow_redirects=False)
+            if resp.status_code == requests.codes.OK:
+                logger.info('登录成功')
+                return True
+            else:
+                logger.info('第【%s】次请重新获取cookie',flag)
+                time.sleep(5)
+                continue
+        except Exception as e:
+            logger.info('第【%s】次请重新获取cookie',flag)
+            time.sleep(5)
+            continue
 
 
 def getUsername():
@@ -481,7 +487,7 @@ while (1):
                     sendMail(skuidUrl, False)
                 sys.exit(1)
         time.sleep(5)
-        if flag % 10 == 0:
+        if flag % 20 == 0:
             logger.info('校验是否还在登录')
             validate_cookies()
     except Exception as e:

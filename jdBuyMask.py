@@ -442,7 +442,7 @@ def item_removed( sku_id):
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
         "Referer": "http://trade.jd.com/shopping/order/getOrderInfo.action",
         "Connection": "keep-alive",
-        'Host': 'trade.jd.com',
+        'Host': 'item.jd.com',
     }
     url = 'https://item.jd.com/{}.html'.format(sku_id)
     page = requests.get(url=url, headers=headers)

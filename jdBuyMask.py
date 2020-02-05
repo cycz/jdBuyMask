@@ -15,17 +15,17 @@ from bs4 import BeautifulSoup
 需要修改
 '''
 # cookie 网页获取
-cookies_String = 'xxxxx'
+cookies_String = 'xxxx'
 
 # 有货通知 收件邮箱
-mail = 'xxxxx@qq.com'
+mail = 'xxxx@qq.com'
 # 商品的url
 url = [
     'https://c0.3.cn/stock?skuId=1336984&area=19_1607_4773_0&venderId=1000078145&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery6715489',
     'https://c0.3.cn/stock?skuId=4642656&area=19_1607_4773_0&venderId=1000006724&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4552086',
     'https://c0.3.cn/stock?skuId=65466451629&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery2790674',
     'https://c0.3.cn/stock?skuId=65437208345&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery1749958',
-    'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
+    # 'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
 ]
 '''
 备用
@@ -33,6 +33,9 @@ url = [
 # eid
 eid = ''
 fp = ''
+# 支付密码
+payment_pwd = ''
+
 session = requests.session()
 session.headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
@@ -130,7 +133,7 @@ session.cookies = cookiesJar
 
 
 def validate_cookies():
-    for flag in range(1,3):
+    for flag in range(1, 3):
         try:
             targetURL = 'https://order.jd.com/center/list.action'
             payload = {
@@ -141,11 +144,11 @@ def validate_cookies():
                 logger.info('登录成功')
                 return True
             else:
-                logger.info('第【%s】次请重新获取cookie',flag)
+                logger.info('第【%s】次请重新获取cookie', flag)
                 time.sleep(5)
                 continue
         except Exception as e:
-            logger.info('第【%s】次请重新获取cookie',flag)
+            logger.info('第【%s】次请重新获取cookie', flag)
             time.sleep(5)
             continue
 
@@ -380,6 +383,13 @@ def submit_order(risk_control):
         # 'submitOrderParam.fp': fp,
         'submitOrderParam.needCheck': 1,
     }
+
+    def encrypt_payment_pwd(payment_pwd):
+        return ''.join(['u3' + x for x in payment_pwd])
+
+    if len(payment_pwd) > 0:
+        data['submitOrderParam.payPassword'] = encrypt_payment_pwd(payment_pwd)
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
@@ -413,7 +423,7 @@ def submit_order(risk_control):
             elif result_code == 60077:
                 message = message + '(可能是购物车为空 或 未勾选购物车中商品)'
             elif result_code == 60123:
-                message = message + '(需要在config.ini文件中配置支付密码)'
+                message = message + '(需要在payment_pwd参数配置支付密码)'
             logger.info('订单提交失败, 错误码：%s, 返回信息：%s', result_code, message)
             logger.info(resp_json)
             return False
@@ -460,7 +470,7 @@ def buyMask(sku_id):
 flag = 0
 while (1):
     try:
-        if flag==0:
+        if flag == 0:
             validate_cookies()
             getUsername()
         checkSession = requests.Session()
@@ -495,5 +505,3 @@ while (1):
 
         print(traceback.format_exc())
         time.sleep(10)
-
-

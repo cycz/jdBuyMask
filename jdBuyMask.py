@@ -224,7 +224,11 @@ def cart_detail():
 
     cart_detail = dict()
     for item in soup.find_all(class_='item-item'):
-        sku_id = item['skuid']  # 商品id
+        try:
+            sku_id = item['skuid']  # 商品id
+        except Exception as e :
+            logger.info('购物车中有套装商品，跳过')
+            continue
         try:
             # 例如：['increment', '8888', '100001071956', '1', '13', '0', '50067652554']
             # ['increment', '8888', '100002404322', '2', '1', '0']

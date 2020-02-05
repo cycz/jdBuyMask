@@ -446,7 +446,7 @@ def item_removed( sku_id):
     }
     url = 'https://item.jd.com/{}.html'.format(sku_id)
     page = requests.get(url=url, headers=headers)
-    return '该商品已下柜' in page.text
+    return '该商品已下柜' not in page.text
 
 '''
 购买环节

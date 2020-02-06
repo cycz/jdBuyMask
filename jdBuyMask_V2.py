@@ -26,12 +26,14 @@ area = global_config.getRaw('config', 'area')
 # 商品id
 skuidsString = global_config.getRaw('config', 'skuids')
 skuids = str(skuidsString).split(',')
+
 if len(skuids[0]) == 0:
     logger.error('请在config.ini文件中输入你的商品id')
     sys.exit(1)
 '''
 备用
 '''
+timesleep = random.randint(5, 15) / 10
 # eid
 eid = global_config.getRaw('config', 'eid')
 fp = global_config.getRaw('config', 'fp')
@@ -492,7 +494,7 @@ while (1):
             else:
                 logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
 
-        time.sleep(1)
+        time.sleep(timesleep)
         if flag % 20 == 0:
             logger.info('校验是否还在登录')
             validate_cookies()

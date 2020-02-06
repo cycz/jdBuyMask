@@ -1,6 +1,7 @@
 # -*- coding=utf-8 -*-
 '''
 京东抢购口罩程序
+通过商品的skuid、地区id抢购
 '''
 import requests
 import time
@@ -10,33 +11,32 @@ import random
 from bs4 import BeautifulSoup
 from log.jdlogger import logger
 from jdemail.jdEmail import sendMail
+from config.config import global_config
+
 '''
 需要修改
 '''
 # cookie 网页获取
-cookies_String = 'xxxxxxx'
+cookies_String = global_config.getRaw('config', 'cookies_String')
 
 # 有货通知 收件邮箱
-mail = 'xxxxxx@qq.com'
-# 商品的url
-url = [
-    # 'https://c0.3.cn/stock?skuId=1336984&area=19_1607_4773_0&venderId=1000078145&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery6715489',
-    # 'https://c0.3.cn/stock?skuId=4642656&area=19_1607_4773_0&venderId=1000006724&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4552086',
-    # 'https://c0.3.cn/stock?skuId=65466451629&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery2790674',
-    # 'https://c0.3.cn/stock?skuId=65437208345&area=19_1607_4773_0&venderId=127922&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery1749958',
-    # 'https://c0.3.cn/stock?skuId=7498169&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery4102801',
-    # 'https://c0.3.cn/stock?skuId=7498165&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery9614479',
-    'https://c0.3.cn/stock?skuId=7263128&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery8872960',
-    # 'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
-]
+mail = global_config.getRaw('config', 'mail')
+# 地区id
+area = global_config.getRaw('config', 'area')
+# 商品id
+skuidsString = global_config.getRaw('config', 'skuids')
+skuids = str(skuidsString).split(',')
+if len(skuids[0]) == 0:
+    logger.error('请在config.ini文件中输入你的商品id')
+    sys.exit(1)
 '''
 备用
 '''
 # eid
-eid = ''
-fp = ''
+eid = global_config.getRaw('config', 'eid')
+fp = global_config.getRaw('config', 'fp')
 # 支付密码
-payment_pwd = ''
+payment_pwd = global_config.getRaw('config', 'payment_pwd')
 
 session = requests.session()
 session.headers = {
@@ -429,6 +429,42 @@ def buyMask(sku_id):
         return False
 
 
+'''
+查询库存
+'''
+
+
+def check_stock():
+    skuidString = ','.join(skuids)
+    callback = 'jQuery' + str(random.randint(1000000, 9999999))
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+        "Referer": "https://cart.jd.com/cart.action",
+        "Connection": "keep-alive",
+    }
+    url = 'https://c0.3.cn/stocks'
+    payload = {
+        'type': 'getstocks',
+        'skuIds': skuidString,
+        'area': area,
+        'callback': callback,
+        '_': int(time.time() * 1000),
+    }
+    resp = session.get(url=url, params=payload, headers=headers)
+    resptext = resp.text.replace(callback + '(', '').replace(')', '')
+    respjson = json.loads(resptext)
+    inStockSkuid = []
+    nohasSkuid = []
+    for i in skuids:
+        if respjson[i]['StockStateName'] != '无货':
+            inStockSkuid.append(i)
+        else:
+            nohasSkuid.append(i)
+    logger.info('[%s]类型口罩无货', ','.join(nohasSkuid))
+    return inStockSkuid
+
+
 flag = 1
 while (1):
     try:
@@ -443,24 +479,20 @@ while (1):
         }
         logger.info('第' + str(flag) + '次 ')
         flag += 1
-        for i in url:
-            # 商品url
-            skuId = i.split('skuId=')[1].split('&')[0]
-            skuidUrl = 'https://item.jd.com/' + skuId + '.html'
-            response = checkSession.get(i)
-            if (response.text.find('无货') > 0):
-                logger.info('[%s]类型口罩无货', skuId)
-            else:
-                if item_removed(skuId):
-                    logger.info('[%s]类型口罩有货啦!马上下单', skuId)
-                    if buyMask(skuId):
-                        sendMail(mail,skuidUrl, True)
-                        sys.exit(1)
-                    else:
-                        sendMail(mail,skuidUrl, False)
+        inStockSkuid = check_stock()
+        for skuId in inStockSkuid:
+            if item_removed(skuId):
+                logger.info('[%s]类型口罩有货啦!马上下单', skuId)
+                skuidUrl = 'https://item.jd.com/' + skuId + '.html'
+                if buyMask(skuId):
+                    sendMail(mail, skuidUrl, True)
+                    sys.exit(1)
                 else:
-                    logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
-        time.sleep(5)
+                    sendMail(mail, skuidUrl, False)
+            else:
+                logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
+
+        time.sleep(1)
         if flag % 20 == 0:
             logger.info('校验是否还在登录')
             validate_cookies()

@@ -459,7 +459,7 @@ def item_removed( sku_id):
 
 
 def buyMask(sku_id):
-    for count in range(1, 3):
+    for count in range(1, 2):
         logger.info('第[%s/%s]次尝试提交订单', count, 3)
         cancel_select_all_cart_item()
         cart = cart_detail()
@@ -516,7 +516,6 @@ while (1):
                         sys.exit(1)
                     else:
                         sendMail(skuidUrl, False)
-                    sys.exit(1)
                 else:
                     logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
         time.sleep(5)

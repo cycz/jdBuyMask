@@ -10,8 +10,8 @@ import sys
 import random
 from bs4 import BeautifulSoup
 from log.jdlogger import logger
-from jdemail.jdEmail import sendMail
 from config.config import global_config
+from message.message import message
 
 '''
 需要修改
@@ -21,6 +21,10 @@ cookies_String = global_config.getRaw('config', 'cookies_String')
 
 # 有货通知 收件邮箱
 mail = global_config.getRaw('config', 'mail')
+# 方糖微信推送的key  不知道的请看http://sc.ftqq.com/3.version
+sc_key = global_config.getRaw('config', 'sc_key')
+# 推送方式 1（mail）或 2（wechat）
+messageTtpe = global_config.getRaw('config', 'messageTtpe')
 # 地区id
 area = global_config.getRaw('config', 'area')
 # 商品id
@@ -30,6 +34,9 @@ skuids = str(skuidsString).split(',')
 if len(skuids[0]) == 0:
     logger.error('请在config.ini文件中输入你的商品id')
     sys.exit(1)
+
+message = message(messageTtpe=messageTtpe, sc_key=sc_key, mail=mail)
+
 '''
 备用
 '''
@@ -457,12 +464,18 @@ def check_stock():
     respjson = json.loads(resptext)
     inStockSkuid = []
     nohasSkuid = []
+    abnormalSkuid = []
     for i in skuids:
-        if respjson[i]['StockStateName'] != '无货':
-            inStockSkuid.append(i)
-        else:
-            nohasSkuid.append(i)
-    logger.info('[%s]类型口罩无货', ','.join(nohasSkuid))
+        try:
+            if respjson[i]['StockStateName'] != '无货':
+                inStockSkuid.append(i)
+            else:
+                nohasSkuid.append(i)
+        except Exception as e:
+            abnormalSkuid.append(i)
+    logger.info('[%s]个skuid口罩无货', len(nohasSkuid))
+    if len(abnormalSkuid) > 0:
+        logger.info('[%s]类型口罩查询异常', ','.join(abnormalSkuid))
     return inStockSkuid
 
 
@@ -481,20 +494,22 @@ while (1):
         logger.info('第' + str(flag) + '次 ')
         flag += 1
         inStockSkuid = check_stock()
+        skuidUrl = 'https://item.jd.com/'
+        message.send(desp=skuidUrl, isOrder = True)
         for skuId in inStockSkuid:
             if item_removed(skuId):
                 logger.info('[%s]类型口罩有货啦!马上下单', skuId)
                 skuidUrl = 'https://item.jd.com/' + skuId + '.html'
                 if buyMask(skuId):
-                    sendMail(mail, skuidUrl, True)
+                    message.send(skuidUrl, True)
                     sys.exit(1)
                 else:
-                    sendMail(mail, skuidUrl, False)
+                    message.send(skuidUrl, False)
             else:
                 logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
         timesleep = random.randint(5, 15) / 10
         time.sleep(timesleep)
-        if flag % 20 == 0:
+        if flag % 40 == 0:
             logger.info('校验是否还在登录')
             validate_cookies()
     except Exception as e:

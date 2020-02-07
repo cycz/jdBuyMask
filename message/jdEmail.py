@@ -5,7 +5,7 @@
 import traceback
 
 
-def sendMail(mail, url, isOrder):
+def sendMail(mail, msgtext):
     try:
         import smtplib
         from email.mime.text import MIMEText
@@ -22,10 +22,7 @@ def sendMail(mail, url, isOrder):
         # 发信服务器
         smtp_server = 'smtp.163.com'
         # 邮箱正文内容，第一个参数为内容，第二个参数为格式(plain 为纯文本)，第三个参数为编码
-        if isOrder:
-            msg = MIMEText(url + ' 类型口罩，已经下单了。24小时内付款', 'plain', 'utf-8')
-        else:
-            msg = MIMEText(url + ' 类型口罩，下单失败了，快去抢购！', 'plain', 'utf-8')
+        msg = MIMEText(msgtext, 'plain', 'utf-8')
         # 邮件头信息
         # msg['From'] = Header(from_addr)
         msg['From'] = Header(u'from Mark<{}>'.format(from_addr), 'utf-8')

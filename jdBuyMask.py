@@ -9,15 +9,23 @@ import sys
 import random
 from bs4 import BeautifulSoup
 from log.jdlogger import logger
-from jdemail.jdEmail import sendMail
+from message.message import message
+
 '''
 需要修改
 '''
 # cookie 网页获取
 cookies_String = 'xxxxxxx'
 
+# 推送方式 1（mail）或 2（wechat）
+messageTtpe = 1
+
 # 有货通知 收件邮箱
 mail = 'xxxxxx@qq.com'
+
+# 方糖微信推送的key  不知道的请看http://sc.ftqq.com/3.version
+sc_key = ''
+
 # 商品的url
 url = [
     # 'https://c0.3.cn/stock?skuId=1336984&area=19_1607_4773_0&venderId=1000078145&buyNum=1&choseSuitSkuIds=&cat=9192,12190,1517&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery6715489',
@@ -29,6 +37,7 @@ url = [
     'https://c0.3.cn/stock?skuId=7263128&area=19_1607_4773_0&venderId=1000128491&buyNum=1&choseSuitSkuIds=&cat=9855,9858,9924&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=15631231857651045904648&ch=1&callback=jQuery8872960',
     # 'https://c0.3.cn/stock?skuId=1739089&area=19_1607_4773_0&venderId=1000017287&buyNum=1&choseSuitSkuIds=&cat=15248,15250,15278&extraParam={%22originid%22:%221%22}&fqsp=0&pdpin=jd_7c3992aa27d1a&pduid=1580535906442142991701&ch=1&callback=jQuery4479703'
 ]
+
 '''
 备用
 '''
@@ -39,7 +48,7 @@ eid = ''
 fp = ''
 # 支付密码
 payment_pwd = ''
-
+message = message(messageTtpe=messageTtpe, sc_key=sc_key, mail=mail)
 session = requests.session()
 session.headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
@@ -456,10 +465,10 @@ while (1):
                 if item_removed(skuId):
                     logger.info('[%s]类型口罩有货啦!马上下单', skuId)
                     if buyMask(skuId):
-                        sendMail(mail,skuidUrl, True)
+                        message.send(skuidUrl, False)
                         sys.exit(1)
                     else:
-                        sendMail(mail,skuidUrl, False)
+                        message.send(skuidUrl, False)
                 else:
                     logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
         timesleep = random.randint(3, 8)

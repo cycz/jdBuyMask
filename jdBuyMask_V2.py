@@ -9,9 +9,9 @@ import json
 import sys
 import random
 from bs4 import BeautifulSoup
-from log.jdlogger import logger
-from config.config import global_config
-from message.message import message
+from jdlogger import logger
+from config import global_config
+from message import message
 import traceback
 
 '''

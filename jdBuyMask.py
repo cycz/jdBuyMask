@@ -8,8 +8,8 @@ import json
 import sys
 import random
 from bs4 import BeautifulSoup
-from log.jdlogger import logger
-from message.message import message
+from jdlogger import logger
+from message import message
 import traceback
 
 '''

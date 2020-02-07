@@ -14,7 +14,7 @@ class message(object):
             self.sc_key = sc_key
         elif messageTtpe == '1':
             if not mail:
-                raise Exception('sc_key can not be empty')
+                raise Exception('mail can not be empty')
             self.mail = mail
         self.messageTtpe = messageTtpe
 

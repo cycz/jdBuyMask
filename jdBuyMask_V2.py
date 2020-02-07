@@ -494,8 +494,6 @@ while (1):
         logger.info('第' + str(flag) + '次 ')
         flag += 1
         inStockSkuid = check_stock()
-        skuidUrl = 'https://item.jd.com/'
-        message.send(desp=skuidUrl, isOrder = True)
         for skuId in inStockSkuid:
             if item_removed(skuId):
                 logger.info('[%s]类型口罩有货啦!马上下单', skuId)

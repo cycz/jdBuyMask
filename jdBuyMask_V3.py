@@ -12,7 +12,6 @@ from bs4 import BeautifulSoup
 from log.jdlogger import logger
 from config.config import global_config
 from message.message import message
-import traceback
 
 '''
 需要修改
@@ -29,7 +28,7 @@ messageTtpe = global_config.getRaw('config', 'messageTtpe')
 # 地区id
 area = global_config.getRaw('config', 'area')
 # 商品id
-skuidsString = global_config.getRaw('config', 'skuids')
+skuidsString = global_config.getRaw('V3', 'skuid')
 skuids = str(skuidsString).split(',')
 
 if len(skuids[0]) == 0:
@@ -145,6 +144,58 @@ def cancel_select_all_cart_item():
         'random': random.random()
     }
     resp = session.post(url, data=data)
+    if resp.status_code != requests.codes.OK:
+        print('Status: %u, Url: %s' % (resp.status_code, resp.url))
+        return False
+    return True
+
+
+'''
+勾选购物车中的所有商品
+'''
+
+
+def select_all_cart_item():
+    url = "https://cart.jd.com/selectAllItem.action"
+    data = {
+        't': 0,
+        'outSkus': '',
+        'random': random.random()
+    }
+    resp = session.post(url, data=data)
+    if resp.status_code != requests.codes.OK:
+        print('Status: %u, Url: %s' % (resp.status_code, resp.url))
+        return False
+    return True
+
+
+'''
+删除购物车选中商品
+'''
+
+
+def remove_item():
+    url = "https://cart.jd.com/batchRemoveSkusFromCart.action"
+    data = {
+        't': 0,
+        'null': '',
+        'outSkus': '',
+        'random': random.random(),
+        'locationId': '19-1607-4773-0'
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.25 Safari/537.36 Core/1.70.37",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Referer": "https://cart.jd.com/cart.action",
+        "Host": "cart.jd.com",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Encoding": "zh-CN,zh;q=0.9,ja;q=0.8",
+        "Origin": "https://cart.jd.com",
+        "Connection": "keep-alive"
+    }
+    resp = session.post(url, data=data, headers=headers)
+    logger.info('清空购物车')
     if resp.status_code != requests.codes.OK:
         print('Status: %u, Url: %s' % (resp.status_code, resp.url))
         return False
@@ -298,9 +349,7 @@ def get_checkout_page_detail():
     return risk_control
 
 
-def submit_order(risk_control,sku_id):
-
-
+def submit_order(risk_control, sku_id):
     """提交订单
 
     重要：
@@ -376,20 +425,17 @@ def submit_order(risk_control,sku_id):
                 resultMessage, result_code = resp_json.get('message'), resp_json.get('resultCode')
                 if result_code == 0:
                     # self._save_invoice()
-                    if '验证码不正确'in resultMessage:
+                    if '验证码不正确' in resultMessage:
                         resultMessage = resultMessage + '(验证码错误)'
                         message.send('账号订单提交失败,需要验证码。避免死循环退出程序', False)
                         logger.info('账号订单提交失败,需要验证码。避免死循环退出程序')
                         sys.exit(1)
-                        # skuids.remove(sku_id)
-                        # logger.info('订单提交失败,避免死循环去除异常id[%s]', sku_id)
                     else:
                         resultMessage = resultMessage + '(下单商品可能为第三方商品，将切换为普通发票进行尝试)'
                 elif result_code == 60077:
                     resultMessage = resultMessage + '(可能是购物车为空 或 未勾选购物车中商品)'
                 elif result_code == 60123:
                     resultMessage = resultMessage + '(需要在payment_pwd参数配置支付密码)'
-
                 logger.info('订单提交失败, 错误码：%s, 返回信息：%s', result_code, resultMessage)
                 logger.info(resp_json)
                 return False
@@ -413,7 +459,7 @@ def item_removed(sku_id):
     }
     url = 'https://item.jd.com/{}.html'.format(sku_id)
     page = requests.get(url=url, headers=headers)
-    return '该商品已下柜' not in page.text
+    return '该商品已下柜' in page.text
 
 
 '''
@@ -423,27 +469,10 @@ def item_removed(sku_id):
 
 
 def buyMask(sku_id):
-    cancel_select_all_cart_item()
-    cart = cart_detail()
-    if sku_id in cart:
-        logger.info('%s 已在购物车中，调整数量为 %s', sku_id, 1)
-        cart_item = cart.get(sku_id)
-        change_item_num_in_cart(
-            sku_id=sku_id,
-            vender_id=cart_item.get('vender_id'),
-            num=1,
-            p_type=cart_item.get('p_type'),
-            target_id=cart_item.get('target_id'),
-            promo_id=cart_item.get('promo_id')
-        )
-    else:
-        add_item_to_cart(sku_id)
     risk_control = get_checkout_page_detail()
     if len(risk_control) > 0:
-        if submit_order(risk_control,sku_id):
+        if submit_order(risk_control, sku_id):
             return True
-    return False
-
 
 
 '''
@@ -482,44 +511,50 @@ def check_stock():
                 nohasSkuid.append(i)
         except Exception as e:
             abnormalSkuid.append(i)
-    logger.info('[%s]个skuid口罩无货', len(nohasSkuid))
+    logger.info('[%s]类型口罩无货', ','.join(nohasSkuid))
     if len(abnormalSkuid) > 0:
         logger.info('[%s]类型口罩查询异常', ','.join(abnormalSkuid))
     return inStockSkuid
 
 
+if len(skuids) != 1:
+    logger.info('请准备一件商品')
+skuId = skuids[0]
 flag = 1
 while (1):
     try:
         if flag == 1:
             validate_cookies()
             getUsername()
-        checkSession = requests.Session()
-        checkSession.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
-            "Connection": "keep-alive"
-        }
+            select_all_cart_item()
+            remove_item()
+            add_item_to_cart(skuId)
+
         logger.info('第' + str(flag) + '次 ')
         flag += 1
         inStockSkuid = check_stock()
-        for skuId in inStockSkuid:
-            if item_removed(skuId):
-                logger.info('[%s]类型口罩有货啦!马上下单', skuId)
-                skuidUrl = 'https://item.jd.com/' + skuId + '.html'
-                if buyMask(skuId):
-                    message.send(skuidUrl, True)
+        if skuId in inStockSkuid:
+            logger.info('[%s]类型口罩有货啦!马上下单', skuId)
+            skuidUrl = 'https://item.jd.com/' + skuId + '.html'
+            if buyMask(skuId):
+                message.send(skuidUrl, True)
+                sys.exit(1)
+            else:
+                if item_removed(skuId):
+                    logger.info('[%s]已下柜商品', skuId)
                     sys.exit(1)
                 else:
                     message.send(skuidUrl, False)
-            else:
-                logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
         timesleep = random.randint(5, 15) / 10
         time.sleep(timesleep)
-        if flag % 40 == 0:
-            logger.info('校验是否还在登录')
+        if flag % 100 == 0:
+            select_all_cart_item()
+            remove_item()
             validate_cookies()
+            logger.info('校验是否还在登录')
+            add_item_to_cart(skuId)
     except Exception as e:
+        import traceback
 
         print(traceback.format_exc())
         time.sleep(10)

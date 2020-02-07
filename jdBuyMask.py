@@ -376,22 +376,22 @@ def submit_order(risk_control,sku_id):
                 logger.info('订单提交成功! 订单号：%s', resp_json.get('orderId'))
                 return True
             else:
-                message, result_code = resp_json.get('message'), resp_json.get('resultCode')
+                resultMessage, result_code = resp_json.get('message'), resp_json.get('resultCode')
                 if result_code == 0:
                     # self._save_invoice()
-                    if '验证码不正确'in message:
-                        message = message + '(验证码错误)'
+                    if '验证码不正确'in resultMessage:
+                        resultMessage = resultMessage + '(验证码错误)'
                     else:
-                        message = message + '(下单商品可能为第三方商品，将切换为普通发票进行尝试)'
+                        resultMessage = resultMessage + '(下单商品可能为第三方商品，将切换为普通发票进行尝试)'
                 elif result_code == 60077:
-                    message = message + '(可能是购物车为空 或 未勾选购物车中商品)'
+                    resultMessage = resultMessage + '(可能是购物车为空 或 未勾选购物车中商品)'
                 elif result_code == 60123:
-                    message = message + '(需要在payment_pwd参数配置支付密码)'
+                    resultMessage = resultMessage + '(需要在payment_pwd参数配置支付密码)'
                 for i in urls:
                     if sku_id in i:
                         urls.remove(i)
                 logger.info('订单提交失败,避免死循环去除异常id[%s]',sku_id)
-                logger.info('订单提交失败, 错误码：%s, 返回信息：%s', result_code, message)
+                logger.info('订单提交失败, 错误码：%s, 返回信息：%s', result_code, resultMessage)
                 logger.info(resp_json)
                 return False
         except Exception as e:

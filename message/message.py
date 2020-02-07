@@ -13,7 +13,7 @@ class message(object):
                 raise Exception('sc_key can not be empty')
             self.sc_key = sc_key
         elif messageTtpe == '1':
-            if not sc_key:
+            if not mail:
                 raise Exception('sc_key can not be empty')
             self.mail = mail
         self.messageTtpe = messageTtpe

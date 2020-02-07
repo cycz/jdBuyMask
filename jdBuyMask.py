@@ -32,7 +32,7 @@ url = [
 '''
 备用
 '''
-timesleep = random.randint(3, 8)
+
 
 # eid
 eid = ''
@@ -462,6 +462,7 @@ while (1):
                         sendMail(mail,skuidUrl, False)
                 else:
                     logger.info('[%s]类型口罩有货，但已下柜商品', skuId)
+        timesleep = random.randint(3, 8)
         time.sleep(timesleep)
         if flag % 20 == 0:
             logger.info('校验是否还在登录')

@@ -18,10 +18,8 @@ class message(object):
             self.mail = mail
         self.messageTtpe = messageTtpe
 
-    def send(self, text='京东商品监控', desp='', isOrder=False):
-        if not text.strip():
-            logger.error('Text of message is empty!')
-            return
+    def send(self, desp='', isOrder=False):
+        desp = str(desp)
         if isOrder:
             msg = desp + ' 类型口罩，已经下单了。24小时内付款'
         else:

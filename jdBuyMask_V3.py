@@ -329,7 +329,8 @@ def get_checkout_page_detail():
         if not response_status(resp):
             logger.error('获取订单结算页信息失败')
             return ''
-
+        if '刷新太频繁了' in resp.text:
+            return '刷新太频繁了'
         soup = BeautifulSoup(resp.text, "html.parser")
         risk_control = get_tag_value(soup.select('input#riskControl'), 'value')
 
@@ -469,7 +470,10 @@ def item_removed(sku_id):
 
 
 def buyMask(sku_id):
+
     risk_control = get_checkout_page_detail()
+    if risk_control == '刷新太频繁了':
+        return False
     if len(risk_control) > 0:
         if submit_order(risk_control, sku_id):
             return True

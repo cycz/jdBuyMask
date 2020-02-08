@@ -284,7 +284,8 @@ def get_checkout_page_detail():
         if not response_status(resp):
             logger.error('获取订单结算页信息失败')
             return ''
-
+        if '刷新太频繁了' in resp.text:
+            return '刷新太频繁了'
         soup = BeautifulSoup(resp.text, "html.parser")
         risk_control = get_tag_value(soup.select('input#riskControl'), 'value')
 
@@ -296,7 +297,7 @@ def get_checkout_page_detail():
         }
 
         logger.info("下单信息：%s", order_detail)
-        return order_detail
+        # return order_detail
     except requests.exceptions.RequestException as e:
         logger.error('订单结算页面获取异常：%s' % e)
     except Exception as e:
@@ -443,6 +444,8 @@ def normalModeBuyMask(sku_id):
     else:
         add_item_to_cart(sku_id)
     risk_control = get_checkout_page_detail()
+    if risk_control == '刷新太频繁了':
+        return False
     if len(risk_control) > 0:
         if submit_order(risk_control, sku_id):
             return True
@@ -452,6 +455,8 @@ def normalModeBuyMask(sku_id):
 def fastModeBuyMask(sku_id):
     add_item_to_cart(sku_id)
     risk_control = get_checkout_page_detail()
+    if risk_control == '刷新太频繁了':
+        return False
     if len(risk_control) > 0:
         if submit_order(risk_control, sku_id):
             return True

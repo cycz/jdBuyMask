@@ -6,16 +6,16 @@ from wechat_ftqq import sendWechat
 class message(object):
     """消息推送类"""
 
-    def __init__(self, messageTtpe, sc_key, mail):
-        if messageTtpe == '2':
+    def __init__(self, messageType, sc_key, mail):
+        if messageType == '2':
             if not sc_key:
                 raise Exception('sc_key can not be empty')
             self.sc_key = sc_key
-        elif messageTtpe == '1':
+        elif messageType == '1':
             if not mail:
                 raise Exception('mail can not be empty')
             self.mail = mail
-        self.messageTtpe = messageTtpe
+        self.messageTtpe = messageType
 
     def send(self, desp='', isOrder=False):
         desp = str(desp)

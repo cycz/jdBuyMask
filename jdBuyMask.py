@@ -19,7 +19,7 @@ import traceback
 cookies_String = 'xxxxxxx'
 
 # 推送方式 1（mail）或 2（wechat）
-messageTtpe = 1
+messageType = 1
 
 # 有货通知 收件邮箱
 mail = 'xxxxxx@qq.com'
@@ -49,7 +49,7 @@ eid = ''
 fp = ''
 # 支付密码
 payment_pwd = ''
-message = message(messageTtpe=messageTtpe, sc_key=sc_key, mail=mail)
+message = message(messageType=messageType, sc_key=sc_key, mail=mail)
 session = requests.session()
 session.headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",

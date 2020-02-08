@@ -24,7 +24,7 @@ mail = global_config.getRaw('config', 'mail')
 # 方糖微信推送的key  不知道的请看http://sc.ftqq.com/3.version
 sc_key = global_config.getRaw('config', 'sc_key')
 # 推送方式 1（mail）或 2（wechat）
-messageTtpe = global_config.getRaw('config', 'messageTtpe')
+messageType = global_config.getRaw('config', 'messageType')
 # 地区id
 area = global_config.getRaw('config', 'area')
 # 商品id
@@ -35,7 +35,7 @@ if len(skuids[0]) == 0:
     logger.error('请在config.ini文件中输入你的商品id')
     sys.exit(1)
 
-message = message(messageTtpe=messageTtpe, sc_key=sc_key, mail=mail)
+message = message(messageType=messageType, sc_key=sc_key, mail=mail)
 
 '''
 备用

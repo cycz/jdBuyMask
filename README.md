@@ -15,7 +15,7 @@
 
 避免抢购，程序自动一次只买一件 
 ## V2版本
-请在configMy.ini 加入商品id、地区id、cookie等参数
+请在configDemo.ini 加入商品id、地区id、cookie等参数
 区分下单模式（默认2正常模式） 
 
 **注意--极速模式默认清空购物车**

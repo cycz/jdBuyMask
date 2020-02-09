@@ -22,7 +22,15 @@ class message(object):
         if isOrder:
             msg = desp + ' 类型口罩，已经下单了。24小时内付款'
         else:
-            msg = desp + ' 类型口罩，下单失败了，快去抢购！'
+            msg = desp + ' 类型口罩，下单失败了'
+        if self.messageType == '1':
+            sendMail(self.mail, msg)
+        if self.messageType == '2':
+            sendWechat(sc_key=self.sc_key, desp=msg)
+
+    def sendAny(self, desp=''):
+        desp = str(desp)
+        msg = desp
         if self.messageType == '1':
             sendMail(self.mail, msg)
         if self.messageType == '2':

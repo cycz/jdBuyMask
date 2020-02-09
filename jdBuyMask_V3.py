@@ -12,6 +12,9 @@ from bs4 import BeautifulSoup
 from jdlogger import logger
 from config import global_config
 from message import message
+import traceback
+from PIL import Image
+from io import BytesIO
 
 '''
 需要修改
@@ -30,6 +33,8 @@ area = global_config.getRaw('config', 'area')
 # 商品id
 skuidsString = global_config.getRaw('V3', 'skuid')
 skuids = str(skuidsString).split(',')
+# 验证码服务地址
+captchaUrl = global_config.getRaw('Temporary', 'captchaUrl')
 
 if len(skuids[0]) == 0:
     logger.error('请在config.ini文件中输入你的商品id')
@@ -41,11 +46,16 @@ message = message(messageType=messageType, sc_key=sc_key, mail=mail)
 备用
 '''
 # eid
-eid = global_config.getRaw('config', 'eid')
-fp = global_config.getRaw('config', 'fp')
+eid = global_config.getRaw('Temporary', 'eid')
+fp = global_config.getRaw('Temporary', 'fp')
 # 支付密码
 payment_pwd = global_config.getRaw('config', 'payment_pwd')
 
+is_Submit_captcha = False
+submit_captcha_rid = ''
+submit_captcha_text = ''
+encryptClientInfo = ''
+submit_Time = 0
 session = requests.session()
 session.headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
@@ -99,6 +109,8 @@ def validate_cookies():
             logger.info('第【%s】次请重新获取cookie', flag)
             time.sleep(5)
             continue
+    message.sendAny('脚本登录cookie失效了，请重新登录')
+    sys.exit(1)
 
 
 def getUsername():
@@ -332,6 +344,15 @@ def get_checkout_page_detail():
         if '刷新太频繁了' in resp.text:
             return '刷新太频繁了'
         soup = BeautifulSoup(resp.text, "html.parser")
+        showCheckCode = get_tag_value(soup.select('input#showCheckCode'), 'value')
+        if not showCheckCode:
+            pass
+        else:
+            if showCheckCode == 'true':
+                logger.info('提交订单需要验证码')
+                global is_Submit_captcha, encryptClientInfo
+                encryptClientInfo = get_tag_value(soup.select('input#encryptClientInfo'), 'value')
+                is_Submit_captcha = True
         risk_control = get_tag_value(soup.select('input#riskControl'), 'value')
 
         order_detail = {
@@ -342,12 +363,69 @@ def get_checkout_page_detail():
         }
 
         logger.info("下单信息：%s", order_detail)
-        return order_detail
+        return risk_control
     except requests.exceptions.RequestException as e:
         logger.error('订单结算页面获取异常：%s' % e)
     except Exception as e:
         logger.error('下单页面数据解析异常：%s', e)
-    return risk_control
+    return ''
+
+
+'''
+订单页面验证码
+'''
+
+
+def page_detail_captcha(isId):
+    url = 'https://captcha.jd.com/verify/image'
+    acid = '{}_{}'.format(random.random(), random.random())
+    payload = {
+        'acid': acid,
+        'srcid': 'trackWeb',
+        'is': isId,
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+        "Referer": "https://trade.jd.com/shopping/order/getOrderInfo.action",
+        "Connection": "keep-alive",
+        'Host': 'captcha.jd.com',
+    }
+    try:
+        resp = session.get(url=url, params=payload, headers=headers)
+        if not response_status(resp):
+            logger.error('获取订单验证码失败')
+            return ''
+        logger.info('解析验证码开始')
+        image = Image.open(BytesIO(resp.content))
+        image.save('captcha.jpg')
+        result = analysis_captcha(resp.content)
+        if not result:
+            logger.error('解析订单验证码失败')
+            return ''
+        global submit_captcha_text, submit_captcha_rid
+        submit_captcha_text = result
+        submit_captcha_rid = acid
+        return result
+    except Exception as e:
+        logger.error('订单验证码获取异常：%s', e)
+    return ''
+
+
+def analysis_captcha(pic):
+    for i in range(1, 10):
+        try:
+            url = captchaUrl
+            resp = session.post(url, pic)
+            if not response_status(resp):
+                logger.error('解析验证码失败')
+                continue
+            logger.info('解析验证码[%s]', resp.text)
+            return resp.text
+        except Exception as e:
+            print(traceback.format_exc())
+            continue
+    return ''
 
 
 def submit_order(risk_control, sku_id):
@@ -361,17 +439,6 @@ def submit_order(risk_control, sku_id):
     """
     url = 'https://trade.jd.com/shopping/order/submitOrder.action'
     # js function of submit order is included in https://trade.jd.com/shopping/misc/js/order.js?r=2018070403091
-
-    # overseaPurchaseCookies:
-    # vendorRemarks: []
-    # submitOrderParam.sopNotPutInvoice: false
-    # submitOrderParam.trackID: TestTrackId
-    # submitOrderParam.ignorePriceChange: 0
-    # submitOrderParam.btSupport: 0
-    # riskControl:
-    # submitOrderParam.isBestCoupon: 1
-    # submitOrderParam.jxj: 1
-    # submitOrderParam.trackId:
 
     data = {
         'overseaPurchaseCookies': '',
@@ -402,12 +469,21 @@ def submit_order(risk_control, sku_id):
         "Connection": "keep-alive",
         'Host': 'trade.jd.com',
     }
-    for count in range(1, 2):
+    for count in range(1, 3):
         logger.info('第[%s/%s]次尝试提交订单', count, 3)
         try:
+            if is_Submit_captcha:
+                global encryptClientInfo, submit_captcha_text, submit_captcha_rid
+                captcha_result = page_detail_captcha(encryptClientInfo)
+                # 验证码服务错误
+                if not captcha_result:
+                    logger.error('验证码服务异常')
+                    continue
+                data['submitOrderParam.checkcodeTxt'] = submit_captcha_text
+                data['submitOrderParam.checkCodeRid'] = submit_captcha_rid
             resp = session.post(url=url, data=data, headers=headers)
             resp_json = json.loads(resp.text)
-
+            logger.info('本次提交订单耗时[%s]毫秒', str(int(time.time() * 1000) - submit_Time))
             # 返回信息示例：
             # 下单失败
             # {'overSea': False, 'orderXml': None, 'cartXml': None, 'noStockSkuIds': '', 'reqInfo': None, 'hasJxj': False, 'addedServiceList': None, 'sign': None, 'pin': 'xxx', 'needCheckCode': False, 'success': False, 'resultCode': 60123, 'orderId': 0, 'submitSkuNum': 0, 'deductMoneyFlag': 0, 'goJumpOrderCenter': False, 'payInfo': None, 'scaleSkuInfoListVO': None, 'purchaseSkuInfoListVO': None, 'noSupportHomeServiceSkuList': None, 'msgMobile': None, 'addressVO': None, 'msgUuid': None, 'message': '请输入支付密码！'}
@@ -428,9 +504,8 @@ def submit_order(risk_control, sku_id):
                     # self._save_invoice()
                     if '验证码不正确' in resultMessage:
                         resultMessage = resultMessage + '(验证码错误)'
-                        message.send('账号订单提交失败,需要验证码。避免死循环退出程序', False)
-                        logger.info('账号订单提交失败,需要验证码。避免死循环退出程序')
-                        sys.exit(1)
+                        logger.info('提交订单验证码[错误]')
+                        continue
                     else:
                         resultMessage = resultMessage + '(下单商品可能为第三方商品，将切换为普通发票进行尝试)'
                 elif result_code == 60077:
@@ -446,7 +521,7 @@ def submit_order(risk_control, sku_id):
 
 
 '''
-
+商品下柜检测
 '''
 
 
@@ -460,7 +535,7 @@ def item_removed(sku_id):
     }
     url = 'https://item.jd.com/{}.html'.format(sku_id)
     page = requests.get(url=url, headers=headers)
-    return '该商品已下柜' in page.text
+    return '该商品已下柜' not in page.text
 
 
 '''
@@ -470,7 +545,6 @@ def item_removed(sku_id):
 
 
 def buyMask(sku_id):
-
     risk_control = get_checkout_page_detail()
     if risk_control == '刷新太频繁了':
         return False
@@ -521,44 +595,60 @@ def check_stock():
     return inStockSkuid
 
 
+def V3check(skuId):
+    select_all_cart_item()
+    remove_item()
+    validate_cookies()
+    logger.info('校验是否还在登录')
+    add_item_to_cart(skuId)
+    if item_removed(skuId):
+        logger.info('[%s]已下柜商品', skuId)
+        sys.exit(1)
+
+
+def V3AutoBuy(inStockSkuid):
+    if skuId in inStockSkuid:
+        global submit_Time
+        submit_Time = int(time.time() * 1000)
+        logger.info('[%s]类型口罩有货啦!马上下单', skuId)
+        skuidUrl = 'https://item.jd.com/' + skuId + '.html'
+        if buyMask(skuId):
+            message.send(skuidUrl, True)
+            sys.exit(1)
+        else:
+            if item_removed(skuId):
+                message.send(skuidUrl, False)
+            else:
+                logger.info('[%s]已下柜商品', skuId)
+                sys.exit(1)
+
+
 if len(skuids) != 1:
     logger.info('请准备一件商品')
 skuId = skuids[0]
 flag = 1
 while (1):
     try:
+        # 初始化校验
+        logger.info('当前是V3版本')
         if flag == 1:
             validate_cookies()
             getUsername()
             select_all_cart_item()
             remove_item()
             add_item_to_cart(skuId)
-
         logger.info('第' + str(flag) + '次 ')
         flag += 1
+        # 检查库存模块
         inStockSkuid = check_stock()
-        if skuId in inStockSkuid:
-            logger.info('[%s]类型口罩有货啦!马上下单', skuId)
-            skuidUrl = 'https://item.jd.com/' + skuId + '.html'
-            if buyMask(skuId):
-                message.send(skuidUrl, True)
-                sys.exit(1)
-            else:
-                if item_removed(skuId):
-                    logger.info('[%s]已下柜商品', skuId)
-                    sys.exit(1)
-                else:
-                    message.send(skuidUrl, False)
+        # 自动下单模块
+        V3AutoBuy(inStockSkuid)
+        # 休眠模块
         timesleep = random.randint(5, 15) / 10
         time.sleep(timesleep)
+        # 校验是否还在登录模块
         if flag % 100 == 0:
-            select_all_cart_item()
-            remove_item()
-            validate_cookies()
-            logger.info('校验是否还在登录')
-            add_item_to_cart(skuId)
+            V3check(skuId)
     except Exception as e:
-        import traceback
-
         print(traceback.format_exc())
         time.sleep(10)

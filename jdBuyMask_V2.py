@@ -15,6 +15,7 @@ from config import global_config
 from message import message
 import traceback
 from PIL import Image
+
 '''
 需要修改
 '''
@@ -60,6 +61,12 @@ encryptClientInfo = ''
 submit_Time = 0
 session = requests.session()
 session.headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+    "Connection": "keep-alive"
+}
+checksession = requests.session()
+checksession.headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
     "Connection": "keep-alive"
@@ -377,7 +384,7 @@ def submit_order(risk_control, sku_id):
                 data['submitOrderParam.checkCodeRid'] = submit_captcha_rid
             resp = session.post(url=url, data=data, headers=headers)
             resp_json = json.loads(resp.text)
-            logger.info('本次提交订单耗时[%s]毫秒',str(int(time.time()*1000)-submit_Time))
+            logger.info('本次提交订单耗时[%s]毫秒', str(int(time.time() * 1000) - submit_Time))
             # 返回信息示例：
             # 下单失败
             # {'overSea': False, 'orderXml': None, 'cartXml': None, 'noStockSkuIds': '', 'reqInfo': None, 'hasJxj': False, 'addedServiceList': None, 'sign': None, 'pin': 'xxx', 'needCheckCode': False, 'success': False, 'resultCode': 60123, 'orderId': 0, 'submitSkuNum': 0, 'deductMoneyFlag': 0, 'goJumpOrderCenter': False, 'payInfo': None, 'scaleSkuInfoListVO': None, 'purchaseSkuInfoListVO': None, 'noSupportHomeServiceSkuList': None, 'msgMobile': None, 'addressVO': None, 'msgUuid': None, 'message': '请输入支付密码！'}
@@ -493,6 +500,8 @@ def item_removed(sku_id):
 购买环节
 测试三次
 '''
+
+
 def normalModeBuyMask(sku_id):
     cancel_select_all_cart_item()
     cart = cart_detail()
@@ -551,7 +560,7 @@ def check_stock():
         'callback': callback,
         '_': int(time.time() * 1000),
     }
-    resp = session.get(url=url, params=payload, headers=headers)
+    resp = checksession.get(url=url, params=payload, headers=headers)
     resptext = resp.text.replace(callback + '(', '').replace(')', '')
     respjson = json.loads(resptext)
     inStockSkuid = []
@@ -638,7 +647,7 @@ def normalModeAutoBuy(inStockSkuid):
 def fastModeAutoBuy(inStockSkuid):
     for skuId in inStockSkuid:
         global submit_Time
-        submit_Time = int(time.time()*1000)
+        submit_Time = int(time.time() * 1000)
         logger.info('[%s]类型口罩有货啦!马上下单', skuId)
         skuidUrl = 'https://item.jd.com/' + skuId + '.html'
         if fastModeBuyMask(skuId):
@@ -648,7 +657,7 @@ def fastModeAutoBuy(inStockSkuid):
             if item_removed(skuId):
                 message.send(skuidUrl, False)
             else:
-                logger.info('[%s]商品已下柜，商品列表中踢出')
+                logger.info('[%s]商品已下柜，商品列表中踢出', skuId)
                 skuids.remove(skuId)
             select_all_cart_item()
             remove_item()
@@ -706,6 +715,7 @@ def fastMode():
         except Exception as e:
             print(traceback.format_exc())
             time.sleep(10)
+
 
 if modelType == '2':
     logger.info('V2版本当前模式[普通模式]')

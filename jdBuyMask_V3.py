@@ -57,7 +57,13 @@ submit_captcha_text = ''
 encryptClientInfo = ''
 submit_Time = 0
 session = requests.session()
+checksession = requests.session()
 session.headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+    "Connection": "keep-alive"
+}
+checksession.headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/531.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
     "Connection": "keep-alive"
@@ -575,7 +581,7 @@ def check_stock():
         'callback': callback,
         '_': int(time.time() * 1000),
     }
-    resp = session.get(url=url, params=payload, headers=headers)
+    resp = checksession.get(url=url, params=payload, headers=headers)
     resptext = resp.text.replace(callback + '(', '').replace(')', '')
     respjson = json.loads(resptext)
     inStockSkuid = []
@@ -630,8 +636,8 @@ flag = 1
 while (1):
     try:
         # 初始化校验
-        logger.info('当前是V3版本')
         if flag == 1:
+            logger.info('当前是V3版本')
             validate_cookies()
             getUsername()
             select_all_cart_item()

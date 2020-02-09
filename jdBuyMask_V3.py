@@ -601,7 +601,7 @@ def V3check(skuId):
     validate_cookies()
     logger.info('校验是否还在登录')
     add_item_to_cart(skuId)
-    if item_removed(skuId):
+    if not item_removed(skuId):
         logger.info('[%s]已下柜商品', skuId)
         sys.exit(1)
 

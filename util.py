@@ -13,7 +13,7 @@ def parse_json(s):
 
 
 def getconfigMd5():
-    with open('configMy.ini', 'r', encoding='utf-8') as f:
+    with open('configDemo.ini', 'r', encoding='utf-8') as f:
         configText = f.read()
         return hashlib.md5(configText.encode('utf-8')).hexdigest()
 

@@ -20,4 +20,3 @@ class Config(object):
         return self._configRaw.get(section, name)
 
 
-global_config = Config()

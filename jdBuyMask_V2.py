@@ -512,7 +512,7 @@ def fastMode():
                 select_all_cart_item()
                 remove_item()
             # 检测配置文件修改
-            if int(time.time()) - configTime >= 10:
+            if int(time.time()) - configTime >= 600:
                 nowMd5 = getconfigMd5()
                 if not nowMd5 == configMd5:
                     logger.info('配置文件修改，重新读取文件')

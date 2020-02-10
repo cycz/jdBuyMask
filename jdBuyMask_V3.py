@@ -35,7 +35,7 @@ def getconfig():
     # 地区id
     area = global_config.getRaw('config', 'area')
     # 商品id
-    skuidsString = global_config.getRaw('V3', 'skuids')
+    skuidsString = global_config.getRaw('V3', 'skuid')
     skuids = str(skuidsString).split(',')
     # 验证码服务地址
     captchaUrl = global_config.getRaw('Temporary', 'captchaUrl')
@@ -52,12 +52,12 @@ def getconfig():
     payment_pwd = global_config.getRaw('config', 'payment_pwd')
 
 
-message = message(messageType=messageType, sc_key=sc_key, mail=mail)
 
 # 初次
 configTime = int(time.time())
 getconfig()
 configMd5 = getconfigMd5()
+message = message(messageType=messageType, sc_key=sc_key, mail=mail)
 
 is_Submit_captcha = False
 submit_captcha_rid = ''

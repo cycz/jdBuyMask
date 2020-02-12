@@ -3,6 +3,7 @@
 
 武汉加油，中国加油
 ****
+使用方法 ： https://blog.csdn.net/cyz52/article/details/104239558
 ## exe版本[口罩小助手] 最多添加99种口罩
 链接：https://pan.baidu.com/s/1bgGXsH071GkHWGlLIwgRVw 
 提取码：do3f 

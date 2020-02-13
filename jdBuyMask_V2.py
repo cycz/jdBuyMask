@@ -1,5 +1,7 @@
 # -*- coding=utf-8 -*-
 '''
+2020/2/13
+(避免滥用，代码已经废弃，现已不更新，有需要请适量使用exe版本)
 京东抢购口罩程序
 通过商品的skuid、地区id抢购
 '''
@@ -470,6 +472,16 @@ def fastModeAutoBuy(inStockSkuid):
             remove_item()
 
 
+def check_Config():
+    global configMd5, configTime
+    nowMd5 = getconfigMd5()
+    configTime = time.time()
+    if not nowMd5 == configMd5:
+        logger.info('配置文件修改，重新读取文件')
+        getconfig()
+        configMd5 = nowMd5
+
+
 def normalMode():
     flag = 1
     while (1):
@@ -477,17 +489,14 @@ def normalMode():
             if flag == 1:
                 validate_cookies()
                 getUsername()
-            # 检测配置文件修改
-            if int(time.time()) - configTime >= 600:
-                nowMd5 = getconfigMd5()
-                if not nowMd5 == configMd5:
-                    logger.info('配置文件修改，重新读取文件')
-                    getconfig()
+            # 检测配置文件是否修改
+            if int(time.time()) - configTime >= 60:
+                check_Config()
             # modelType
             logger.info('第' + str(flag) + '次 ')
             flag += 1
             # 检测库存
-            inStockSkuid = check_stock()
+            inStockSkuid = check_stock(checksession, skuids, area)
             # 下单任务
             normalModeAutoBuy(inStockSkuid)
             # 休眠模块
@@ -513,10 +522,7 @@ def fastMode():
                 remove_item()
             # 检测配置文件修改
             if int(time.time()) - configTime >= 600:
-                nowMd5 = getconfigMd5()
-                if not nowMd5 == configMd5:
-                    logger.info('配置文件修改，重新读取文件')
-                    getconfig()
+                check_Config()
             # modelType
             logger.info('第' + str(flag) + '次 ')
             flag += 1
@@ -535,7 +541,8 @@ def fastMode():
             print(traceback.format_exc())
             time.sleep(10)
 
-_setDNSCache()
+
+# _setDNSCache()
 if modelType == '2':
     logger.info('V2版本当前模式[普通模式]')
     normalMode()

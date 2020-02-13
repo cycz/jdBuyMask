@@ -1,7 +1,5 @@
 # -*- coding=utf-8 -*-
-'''
-查询库存
-'''
+
 import json
 import random
 import time
@@ -13,6 +11,14 @@ from jdlogger import logger
 from util import parse_json, response_status
 import traceback
 
+'''
+2020/2/13
+(避免滥用，代码已经废弃，现已不更新，有需要请适量使用exe版本)
+'''
+'''
+查询库存（旧）
+'''
+
 
 def check_stock(checksession, skuids, area):
     start = int(time.time() * 1000)
@@ -23,7 +29,7 @@ def check_stock(checksession, skuids, area):
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
         "Referer": "https://cart.jd.com/cart.action",
         "Connection": "keep-alive",
-        "Host":"c0.3.cn"
+        "Host": "c0.3.cn"
     }
     #
     url = 'https://c0.3.cn/stocks'

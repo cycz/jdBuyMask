@@ -1,7 +1,8 @@
 # -*- coding=utf-8 -*-
 '''
-京东抢购口罩程序
-通过商品的skuid、地区id抢购
+2020/2/13
+(避免滥用，代码已经废弃，现已不更新，有需要请适量使用exe版本)
+京东抢购口罩程序V3版本
 '''
 import sys
 import traceback
@@ -50,7 +51,6 @@ def getconfig():
     fp = global_config.getRaw('Temporary', 'fp')
     # 支付密码
     payment_pwd = global_config.getRaw('config', 'payment_pwd')
-
 
 
 # 初次
@@ -446,7 +446,18 @@ def V3AutoBuy(inStockSkuid):
                 logger.info('[%s]已下柜商品', skuId)
                 sys.exit(1)
 
-_setDNSCache()
+
+def check_Config():
+    global configMd5, configTime
+    nowMd5 = getconfigMd5()
+    configTime = time.time()
+    if not nowMd5 == configMd5:
+        logger.info('配置文件修改，重新读取文件')
+        getconfig()
+        configMd5 = nowMd5
+
+
+# _setDNSCache()
 if len(skuids) != 1:
     logger.info('请准备一件商品')
 skuId = skuids[0]
@@ -462,11 +473,8 @@ while (1):
             remove_item()
             add_item_to_cart(skuId)
         # 检测配置文件修改
-        if int(time.time()) - configTime >= 600:
-            nowMd5 = getconfigMd5()
-            if not nowMd5 == configMd5:
-                logger.info('配置文件修改，重新读取文件')
-                getconfig()
+        if int(time.time()) - configTime >= 60:
+            check_Config()
         logger.info('第' + str(flag) + '次 ')
         flag += 1
         # 检查库存模块
